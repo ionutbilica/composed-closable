@@ -14,12 +14,20 @@ class ComposedCloseable implements Closeable{
     
     @Override
     void close() throws IOException {
+        Exception firstThrown = null
         closeables.reverse().each {
             try {
                 it.close();
-            } catch (Exception ignored) {
-                println "Ignored exception during closing closeable [${it}]: [${ignored}]"
+            } catch (Exception e) {
+                if (firstThrown == null) {
+                    firstThrown = e
+                } else {
+                    firstThrown.addSuppressed(e)
+                }
             }
+        }
+        if (firstThrown != null) {
+            throw firstThrown
         }
     }
 }
